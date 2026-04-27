@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI日報アシスタント</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#f7f6f3;color:#37352f;min-height:100vh;font-size:15px}
+.header{background:#fff;border-bottom:1px solid #e9e9e7;padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:16px;font-weight:600}
+.header .dt{font-size:12px;color:#9b9a97}
+.wrap{max-width:860px;margin:0 auto;padding:24px 20px 60px}
+.card{background:#fff;border-radius:8px;border:1px solid #e9e9e7;padding:20px 24px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:600;color:#9b9a97;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+.meta-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:4px}
+.meta-field label{font-size:12px;color:#9b9a97;display:block;margin-bottom:5px}
+.meta-field input,.meta-field select{width:100%;padding:7px 10px;border:1px solid #e9e9e7;border-radius:5px;font-size:13px;font-family:inherit;color:#37352f;outline:none;background:#fff}
+.meta-field select[multiple]{height:84px}
+.todo-list{display:flex;flex-direction:column;gap:7px}
+.todo-item{display:flex;align-items:center;gap:8px}
+.todo-item input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#37352f;flex-shrink:0}
+.todo-item input[type=text]{flex:1;border:none;border-bottom:1px solid transparent;padding:3px 2px;font-size:13px;font-family:inherit;color:#37352f;outline:none;background:transparent}
+.todo-item input[type=text]:focus{border-bottom-color:#e9e9e7}
+.todo-item input[type=text]::placeholder{color:#c7c6c3}
+.add-todo{font-size:12px;color:#9b9a97;cursor:pointer;padding:5px 0;margin-top:5px;display:inline-block}
+.add-todo:hover{color:#37352f}
+textarea.journal{width:100%;min-height:150px;border:1px solid #e9e9e7;border-radius:6px;padding:12px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.8;color:#37352f;outline:none;background:#fafafa}
+textarea.journal:focus{border-color:#37352f;background:#fff}
+textarea.journal::placeholder{color:#c7c6c3}
+.btn-row{display:flex;align-items:center;gap:8px;margin-top:14px}
+.btn{padding:9px 20px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.btn-dark{background:#37352f;color:#fff}
+.btn-dark:hover{background:#1a1a18}
+.btn-dark:disabled{background:#c7c6c3;cursor:not-allowed}
+.btn-light{background:#fff;color:#37352f;border:1px solid #e9e9e7}
+.btn-light:hover{background:#f7f6f3}
+.loading{display:none;align-items:center;gap:8px;color:#9b9a97;font-size:13px;margin-top:12px}
+.loading.show{display:flex}
+.spin{width:14px;height:14px;border:2px solid #e9e9e7;border-top-color:#37352f;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.divider{border:none;border-top:2px dashed #e9e9e7;margin:24px 0}
+.output{display:none}
+.output.show{display:block}
+.out-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.out-title{font-size:20px;font-weight:600;margin-bottom:4px}
+.out-date{font-size:12px;color:#9b9a97}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.tag{font-size:11px;padding:3px 9px;border-radius:4px;font-weight:500}
+.tag-家族{background:#e1f5ee;color:#0f6e56}
+.tag-学び{background:#e6f1fb;color:#185fa5}
+.tag-不動産{background:#faeeda;color:#854f0b}
+.tag-AI事業{background:#eeedfe;color:#534ab7}
+.tag-健康{background:#fcebeb;color:#a32d2d}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.metric{background:#f7f6f3;border-radius:6px;padding:12px 14px}
+.metric-label{font-size:11px;color:#9b9a97;margin-bottom:3px}
+.metric-val{font-size:20px;font-weight:600}
+.metric-unit{font-size:11px;color:#9b9a97;font-weight:400}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.oblock{background:#fff;border-radius:8px;border:1px solid #e9e9e7;padding:16px 18px}
+.oblock-label{font-size:11px;font-weight:600;color:#9b9a97;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.edit-hint{font-size:10px;color:#c7c6c3;font-weight:400;text-transform:none;letter-spacing:0}
+.regen-btn{background:none;border:1px solid #e9e9e7;cursor:pointer;color:#9b9a97;font-size:11px;font-family:inherit;padding:2px 8px;border-radius:4px;transition:all .15s}
+.regen-btn:hover{background:#f7f6f3;color:#37352f}
+.regen-btn:disabled{opacity:.4;cursor:not-allowed}
+textarea.editable{width:100%;border:none;background:transparent;font-size:13px;font-family:inherit;color:#37352f;line-height:1.75;resize:none;outline:none;min-height:60px;padding:0}
+textarea.editable:focus{background:#f7f6f3;border-radius:4px;padding:6px;margin:-6px;width:calc(100% + 12px)}
+.todo-out{display:flex;flex-direction:column;gap:7px}
+.todo-out-item{display:flex;align-items:flex-start;gap:7px;font-size:13px;line-height:1.5}
+.todo-done{color:#9b9a97;text-decoration:line-through}
+.copy-btn{background:#37352f;color:#fff;border:none;border-radius:6px;padding:9px 18px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap}
+.copy-btn:hover{background:#1a1a18}
+.copy-btn.copied{background:#0f6e56}
+
+.tag-btn {
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1.5px solid #e9e9e7;
+  background: #fff;
+  color: #9b9a97;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .15s;
+  font-weight: 500;
+}
+.tag-btn.active {
+  border-color: #37352f;
+  background: #37352f;
+  color: #fff;
+}
+.tag-btn:hover:not(.active) {
+  border-color: #9b9a97;
+  color: #37352f;
+}
+@media (max-width: 600px) {
+  .tag-btn { padding: 9px 18px; font-size: 14px; }
+
+  .header { padding: 12px 16px; }
+  .header h1 { font-size: 14px; }
+  .wrap { padding: 14px 12px 60px; }
+  .card { padding: 16px 14px; }
+  .meta-row { grid-template-columns: 1fr !important; gap: 10px; }
+  .meta-field select[multiple] { height: 70px; }
+  .grid2 { grid-template-columns: 1fr !important; }
+  .grid3 { grid-template-columns: 1fr !important; }
+  .metrics { grid-template-columns: repeat(3,1fr); gap: 6px; }
+  .metric { padding: 10px 8px; }
+  .metric-val { font-size: 16px; }
+  .metric-label { font-size: 10px; }
+  .out-header { flex-direction: column; gap: 12px; }
+  .out-header .copy-btn { width: 100%; text-align: center; }
+  .btn-row { flex-wrap: wrap; }
+  .btn { width: 100%; text-align: center; margin: 0 !important; }
+  .btn-dark { order: 1; }
+  .btn-light { order: 2; }
+  textarea.journal { min-height: 120px; font-size: 16px; }
+  textarea.editable { font-size: 14px; }
+  #template-checks { grid-template-columns: 1fr !important; }
+  .add-todo { font-size: 14px; padding: 8px 0; }
+  .todo-item input[type=text] { font-size: 16px; }
+  .oblock { padding: 14px 12px; }
+  .oblock-label { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .regen-btn { width: 100%; text-align: center; padding: 6px; }
+  .out-title { font-size: 17px; }
+  .copy-btn { padding: 12px 18px; font-size: 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📓 AI日報アシスタント</h1>
+  <span class="dt" id="today-date"></span>
+</div>
+
+<div class="wrap">
+
+  <div class="card">
+    <div class="card-title">基本情報</div>
+    <div class="meta-row">
+      <div class="meta-field">
+        <label>継続日数</label>
+        <input type="number" id="day-count" value="115" min="1">
+      </div>
+      <div class="meta-field">
+        <label>気分スコア（1〜5）</label>
+        <select id="mood-score">
+          <option value="5">5 ／ 最高</option>
+          <option value="4" selected>4 ／ 良い</option>
+          <option value="3">3 ／ 普通</option>
+          <option value="2">2 ／ やや悪い</option>
+          <option value="1">1 ／ 辛い</option>
+        </select>
+      </div>
+      <div class="meta-field" style="grid-column:1/-1">
+        <label>タグ（タップして選択）</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px" id="tag-buttons">
+          <button type="button" onclick="toggleTag(this)" data-value="家族" class="tag-btn active">家族</button>
+          <button type="button" onclick="toggleTag(this)" data-value="学び" class="tag-btn">学び</button>
+          <button type="button" onclick="toggleTag(this)" data-value="不動産" class="tag-btn">不動産</button>
+          <button type="button" onclick="toggleTag(this)" data-value="AI事業" class="tag-btn">AI事業</button>
+          <button type="button" onclick="toggleTag(this)" data-value="健康" class="tag-btn">健康</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:0">✅ Today's Todo</div>
+      <button onclick="loadTemplate()" style="background:#f7f6f3;border:1px solid #e9e9e7;border-radius:5px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;color:#37352f">テンプレートを読み込む</button>
+    </div>
+    <div style="margin-bottom:14px;padding:12px 14px;background:#f7f6f3;border-radius:6px;border:1px solid #e9e9e7">
+      <div style="font-size:11px;font-weight:600;color:#9b9a97;margin-bottom:10px;letter-spacing:.05em">📋 ルーティンタスク（チェックして読み込む）</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="template-checks">
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="Notion日報記入" checked style="accent-color:#37352f"> Notion日報記入</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="読書・インプット" checked style="accent-color:#37352f"> 読書・インプット</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="AIツール構築" checked style="accent-color:#37352f"> AIツール構築</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="マネーフォワード入力" style="accent-color:#37352f"> マネーフォワード入力</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="育児・家族時間" style="accent-color:#37352f"> 育児・家族時間</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="SNS投稿・発信" style="accent-color:#37352f"> SNS投稿・発信</label>
+      </div>
+    </div>
+    <div class="todo-list" id="todo-list"></div>
+    <span class="add-todo" onclick="addTodo()">＋ カスタムタスクを追加</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📝 今日の記録</div>
+    <textarea class="journal" id="journal-input" placeholder="今日あったこと、感じたこと、気づいたことを自由に書いてください。AIが整えて、気づき・学び・事業への接続を自動で抽出します。"></textarea>
+    <div class="btn-row" style="gap:8px;flex-wrap:wrap">
+      <button class="btn btn-dark" onclick="processJournal()" id="process-btn">AIで処理する</button>
+      <button class="btn btn-light" style="margin-left:0" onclick="clearAll()">クリア</button>
+    </div>
+    <div class="loading" id="loading">
+      <div class="spin"></div>
+      <span id="loading-text">AIが分析中...</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="output" id="output">
+
+    <div class="out-header">
+      <div>
+        <div class="out-title" id="out-title">Daily Log　115日目</div>
+        <div class="out-date" id="out-date"></div>
+        <div class="tags" id="out-tags"></div>
+      </div>
+      <button class="copy-btn" onclick="copyOutput()" id="copy-btn1">Notionにコピー</button>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">気分スコア</div>
+        <div class="metric-val" id="out-mood">— <span class="metric-unit">/ 5</span></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Todo完了</div>
+        <div class="metric-val" id="out-todo-count">— <span class="metric-unit">件</span></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">継続日数</div>
+        <div class="metric-val" id="out-days">— <span class="metric-unit">日目</span></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="oblock">
+        <div class="oblock-label">📝 今日の記録（AI整文）<span class="edit-hint">編集可</span></div>
+        <textarea class="editable" id="out-journal" rows="6"></textarea>
+      </div>
+      <div class="oblock">
+        <div class="oblock-label">✅ Todo</div>
+        <div id="out-todo-list"></div>
+      </div>
+    </div>
+
+    <div class="grid3">
+      <div class="oblock">
+        <div class="oblock-label">💡 気づき・学び
+          <button class="regen-btn" id="regen-insight" onclick="regenerate('insight')">再生成</button>
+        </div>
+        <textarea class="editable" id="out-insight" rows="5"></textarea>
+      </div>
+      <div class="oblock">
+        <div class="oblock-label">🏢 事業への接続
+          <button class="regen-btn" id="regen-business" onclick="regenerate('business')">再生成</button>
+        </div>
+        <textarea class="editable" id="out-business" rows="5"></textarea>
+      </div>
+      <div class="oblock">
+        <div class="oblock-label">🎯 明日の一番大事なこと
+          <button class="regen-btn" id="regen-tomorrow" onclick="regenerate('tomorrow')">再生成</button>
+        </div>
+        <textarea class="editable" id="out-tomorrow" rows="5"></textarea>
+      </div>
+    </div>
+
+    <div style="text-align:right">
+      <button class="copy-btn" onclick="copyOutput()" id="copy-btn2">Notionにコピー</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const today = new Date();
+window.addEventListener('load', ()=>{ setTimeout(loadTemplate, 100); });
+const dateStr = today.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+document.getElementById('today-date').textContent = dateStr;
+document.getElementById('out-date').textContent = dateStr;
+
+let lastJournal = '';
+
+function loadTemplate(){
+  const list=document.getElementById('todo-list');
+  const checked=Array.from(document.querySelectorAll('.tmpl-cb:checked')).map(c=>c.value);
+  list.innerHTML='';
+  checked.forEach(text=>{
+    const d=document.createElement('div');
+    d.className='todo-item';
+    d.innerHTML='<input type="checkbox"><input type="text" value="'+text+'">';
+    list.appendChild(d);
+  });
+}
+
+function addTodo(){
+  const list = document.getElementById('todo-list');
+  const d = document.createElement('div');
+  d.className = 'todo-item';
+  d.innerHTML = '<input type="checkbox"><input type="text" placeholder="タスクを入力...">';
+  list.appendChild(d);
+  d.querySelector('input[type=text]').focus();
+}
+
+function getTodos(){
+  return Array.from(document.querySelectorAll('.todo-item')).map(el=>({
+    done: el.querySelector('input[type=checkbox]').checked,
+    text: el.querySelector('input[type=text]').value.trim()
+  })).filter(t=>t.text);
+}
+
+function getTags(){
+  return Array.from(document.querySelectorAll('.tag-btn.active')).map(b=>b.dataset.value);
+}
+
+function toggleTag(btn){
+  btn.classList.toggle('active');
+}
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=el.scrollHeight+'px';
+}
+
+let loadInterval;
+const msgs=['文章を読み込み中...','内容を分析中...','気づきを抽出中...','事業接続を考察中...','まとめを生成中...'];
+
+function startLoad(){
+  let i=0;
+  const el=document.getElementById('loading-text');
+  el.textContent=msgs[0];
+  loadInterval=setInterval(()=>{i=(i+1)%msgs.length;el.textContent=msgs[i];},1800);
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('process-btn').disabled=true;
+}
+
+function stopLoad(){
+  clearInterval(loadInterval);
+  document.getElementById('loading').classList.remove('show');
+  document.getElementById('process-btn').disabled=false;
+}
+
+async function callAI(prompt){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  const d=await r.json();
+  const t=d.content.find(b=>b.type==='text')?.text||'';
+  return JSON.parse(t.replace(/```json|```/g,'').trim());
+}
+
+async function processJournal(){
+  const journal=document.getElementById('journal-input').value.trim();
+  if(!journal){alert('今日の記録を入力してください。');return;}
+  lastJournal=journal;
+  startLoad();
+  try{
+    const todos=getTodos();
+    const todoText=todos.map(t=>`- [${t.done?'x':' '}] ${t.text}`).join('\n')||'なし';
+    const result=await callAI(`あなたは個人事業主（不動産事業・AI事業準備中）の日報アシスタントです。以下を処理しJSONのみ返してください(\`\`\`不要)。
+
+【日報】${journal}
+【Todo】${todoText}
+
+{"journal_polished":"自然に整えた文章300字程度。元の意図感情具体エピソードを保ち読みやすく。書き言葉。","insight":"気づき学びを2〜3点。各点改行区切り。「・」始まり。","business":"不動産またはAI事業復職後への接続1〜2点。「・」始まり。","tomorrow":"明日の一番大事なことを1文。行動ベースで具体的に。"}`);
+    renderOutput(result,todos);
+  }catch(e){
+    alert('エラーが発生しました。\n'+e.message);
+  }
+  stopLoad();
+}
+
+function renderOutput(result,todos){
+  const day=document.getElementById('day-count').value;
+  const mood=document.getElementById('mood-score').value;
+  const tags=getTags();
+  const done=todos.filter(t=>t.done).length;
+
+  document.getElementById('out-title').textContent=`Daily Log　${day}日目`;
+  document.getElementById('out-mood').innerHTML=`${mood} <span class="metric-unit">/ 5</span>`;
+  document.getElementById('out-days').innerHTML=`${day} <span class="metric-unit">日目</span>`;
+  document.getElementById('out-todo-count').innerHTML=`${done} <span class="metric-unit">/ ${todos.length}</span>`;
+  document.getElementById('out-tags').innerHTML=tags.map(t=>`<span class="tag tag-${t}">${t}</span>`).join('');
+
+  [['journal','journal_polished'],['insight','insight'],['business','business'],['tomorrow','tomorrow']].forEach(([id,key])=>{
+    const el=document.getElementById('out-'+id);
+    el.value=result[key]||'';
+    autoResize(el);
+    el.oninput=()=>autoResize(el);
+  });
+
+  document.getElementById('out-todo-list').innerHTML=todos.length
+    ?`<div class="todo-out">${todos.map(t=>`<div class="todo-out-item"><span style="color:${t.done?'#0f6e56':'#c7c6c3'};flex-shrink:0">${t.done?'☑':'☐'}</span><span class="${t.done?'todo-done':''}">${t.text}</span></div>`).join('')}</div>`
+    :'<span style="font-size:12px;color:#c7c6c3">タスクなし</span>';
+
+  document.getElementById('output').classList.add('show');
+  setTimeout(()=>document.getElementById('output').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+async function regenerate(field){
+  const journal=lastJournal||document.getElementById('journal-input').value.trim();
+  if(!journal){alert('今日の記録を入力してください。');return;}
+  const btn=document.getElementById('regen-'+field);
+  btn.textContent='生成中...';btn.disabled=true;
+  const labels={insight:'気づき・学びを2〜3点。各点改行。「・」始まり。',business:'不動産またはAI事業復職後への接続1〜2点。「・」始まり。',tomorrow:'明日の一番大事なことを1文。行動ベースで具体的に。'};
+  try{
+    const r=await callAI(`以下の日報から指定項目のみ生成しJSONのみ返してください(\`\`\`不要)。\n【日報】${journal}\n{"result":"${labels[field]}"}`);
+    const el=document.getElementById('out-'+field);
+    el.value=r.result||'';
+    autoResize(el);
+  }catch(e){alert('再生成に失敗しました。');}
+  btn.textContent='再生成';btn.disabled=false;
+}
+
+function clearAll(){
+  document.getElementById('journal-input').value='';
+  document.getElementById('output').classList.remove('show');
+  document.querySelectorAll('.todo-item input[type=text]').forEach(i=>i.value='');
+  document.querySelectorAll('.todo-item input[type=checkbox]').forEach(c=>c.checked=false);
+  lastJournal='';
+}
+
+function buildText(){
+  const day=document.getElementById('day-count').value;
+  const mood=document.getElementById('mood-score').value;
+  const tags=getTags().join(' / ');
+  const todos=getTodos();
+  return `# 📅 ${dateStr}　${day}日目\n\n**タグ**：${tags}　　**気分スコア**：${mood} / 5\n\n---\n\n## ✅ Today's Todo\n${todos.map(t=>`- [${t.done?'x':' '}] ${t.text}`).join('\n')||'（なし）'}\n\n---\n\n## 📝 今日の記録\n${document.getElementById('out-journal').value}\n\n---\n\n## 💡 気づき・学び\n${document.getElementById('out-insight').value}\n\n## 🏢 事業への接続\n${document.getElementById('out-business').value}\n\n## 🎯 明日の一番大事なこと\n${document.getElementById('out-tomorrow').value}\n`;
+}
+
+function setBtnCopied(){
+  ['copy-btn1','copy-btn2'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){b.textContent='コピーしました！';b.classList.add('copied');
+    setTimeout(()=>{b.textContent='Notionにコピー';b.classList.remove('copied');},2000);}
+  });
+}
+
+function showTextModal(text){
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML=`
+    <div style="background:#fff;border-radius:10px;padding:24px;width:100%;max-width:640px;max-height:80vh;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <p style="font-size:14px;font-weight:600;color:#37352f">以下を全選択（Cmd/Ctrl+A）してコピー（Cmd/Ctrl+C）してください</p>
+        <button onclick="this.closest('div[style]').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9b9a97;line-height:1">×</button>
+      </div>
+      <textarea id="modal-text" style="flex:1;min-height:300px;border:1px solid #e9e9e7;border-radius:6px;padding:12px;font-size:13px;font-family:monospace;resize:none;outline:none;line-height:1.7">${text.replace(/</g,'&lt;')}</textarea>
+      <button onclick="selectAll()" style="background:#37352f;color:#fff;border:none;border-radius:6px;padding:10px;font-size:13px;font-weight:500;cursor:pointer">全選択する</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+  setTimeout(()=>{const ta=document.getElementById('modal-text');ta.focus();ta.select();},100);
+}
+
+function selectAll(){
+  const ta=document.getElementById('modal-text');
+  if(ta){ta.focus();ta.select();}
+}
+
+function copyOutput(){
+  const text=buildText();
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(()=>{
+      setBtnCopied();
+    }).catch(()=>{
+      showTextModal(text);
+    });
+  } else {
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=text;
+      ta.style.cssText='position:fixed;top:-9999px;left:-9999px';
+      document.body.appendChild(ta);
+      ta.focus();ta.select();
+      const ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+      if(ok){setBtnCopied();}else{showTextModal(text);}
+    }catch(e){
+      showTextModal(text);
+    }
+  }
+}
+</script>
+</body>
+</html>
