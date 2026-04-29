@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>わたしの毎日ノート</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:linear-gradient(135deg,#fdf6f0 0%,#fef0f5 100%);color:#4a4a4a;min-height:100vh;font-size:15px}
+.header{background:rgba(255,255,255,0.9);backdrop-filter:blur(10px);border-bottom:1px solid #f0e0e8;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px;font-weight:600;color:#c0748a}
+.header .dt{font-size:11px;color:#c0a0a8}
+.wrap{max-width:680px;margin:0 auto;padding:20px 16px 80px}
+.card{background:rgba(255,255,255,0.85);border-radius:16px;border:1px solid #f5e0e8;padding:20px 22px;margin-bottom:14px;box-shadow:0 2px 12px rgba(192,116,138,0.06)}
+.card-title{font-size:12px;font-weight:600;color:#c0a0a8;letter-spacing:.06em;margin-bottom:14px}
+.mood-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.mood-btn{padding:10px 16px;border-radius:20px;border:1.5px solid #f0d8e0;background:#fff;font-size:18px;cursor:pointer;transition:all .15s;font-family:inherit}
+.mood-btn.active{border-color:#c0748a;background:#fdf0f4;transform:scale(1.1)}
+.tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.tag-btn{padding:8px 16px;border-radius:20px;border:1.5px solid #f0d8e0;background:#fff;color:#c0a0a8;font-size:13px;font-family:inherit;cursor:pointer;transition:all .15s;font-weight:500}
+.tag-btn.active{border-color:#c0748a;background:#fdf0f4;color:#c0748a}
+.todo-list{display:flex;flex-direction:column;gap:10px}
+.todo-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;border:1px solid #f5e0e8;background:#fff}
+.todo-item input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#c0748a;flex-shrink:0}
+.todo-item input[type=text]{flex:1;border:none;font-size:14px;font-family:inherit;color:#4a4a4a;outline:none;background:transparent}
+.todo-item input[type=text]::placeholder{color:#d0b8c0}
+.add-todo{font-size:13px;color:#c0a0a8;cursor:pointer;padding:8px 0;margin-top:6px;display:inline-block}
+textarea.journal{width:100%;min-height:140px;border:1.5px solid #f0d8e0;border-radius:12px;padding:14px;font-size:15px;font-family:inherit;resize:vertical;line-height:1.9;color:#4a4a4a;outline:none;background:rgba(255,255,255,0.8)}
+textarea.journal:focus{border-color:#c0748a;background:#fff}
+textarea.journal::placeholder{color:#d0b8c0;line-height:1.9}
+.hint{font-size:12px;color:#c0a0a8;margin-top:8px;line-height:1.6}
+.btn{padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;width:100%;text-align:center}
+.btn-main{background:linear-gradient(135deg,#d4748a,#c0748a);color:#fff;box-shadow:0 4px 14px rgba(192,116,138,0.3)}
+.btn-main:disabled{background:#e0c0c8;box-shadow:none;cursor:not-allowed}
+.btn-clear{background:#fff;color:#c0a0a8;border:1.5px solid #f0d8e0;margin-top:8px}
+.loading{display:none;align-items:center;gap:10px;color:#c0a0a8;font-size:13px;margin-top:12px;justify-content:center}
+.loading.show{display:flex}
+.spin{width:16px;height:16px;border:2px solid #f0d8e0;border-top-color:#c0748a;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.divider{border:none;border-top:2px dashed #f0d8e0;margin:24px 0}
+.output{display:none}
+.output.show{display:block}
+.praise-box{background:linear-gradient(135deg,#fdf0f4,#fef5f0);border-radius:16px;border:1.5px solid #f0d0d8;padding:20px 22px;margin-bottom:14px;text-align:center}
+.praise-emoji{font-size:40px;margin-bottom:8px}
+.praise-title{font-size:13px;color:#c0a0a8;margin-bottom:8px;font-weight:600;letter-spacing:.05em}
+textarea.editable{width:100%;border:none;background:transparent;font-size:14px;font-family:inherit;color:#4a4a4a;line-height:1.85;resize:none;outline:none;min-height:60px;padding:0;text-align:center}
+.oblock{background:rgba(255,255,255,0.85);border-radius:14px;border:1px solid #f5e0e8;padding:18px 20px;margin-bottom:12px}
+.oblock-label{font-size:11px;font-weight:600;color:#c0a0a8;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.regen-btn{background:none;border:1px solid #f0d8e0;cursor:pointer;color:#c0a0a8;font-size:11px;font-family:inherit;padding:3px 10px;border-radius:8px}
+textarea.editable-left{width:100%;border:none;background:transparent;font-size:14px;font-family:inherit;color:#4a4a4a;line-height:1.85;resize:none;outline:none;min-height:60px;padding:0}
+.todo-out-item{display:flex;align-items:flex-start;gap:8px;font-size:14px;line-height:1.6;margin-bottom:6px}
+.copy-btn{width:100%;background:linear-gradient(135deg,#d4748a,#c0748a);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(192,116,138,0.3);margin-top:4px}
+.copy-btn.copied{background:linear-gradient(135deg,#7abf9a,#5aaf8a)}
+.continue-msg{text-align:center;font-size:13px;color:#c0a0a8;margin-top:16px;line-height:1.7}
+@media(max-width:600px){
+  .wrap{padding:14px 12px 80px}
+  .card{padding:16px 14px}
+  .btn{padding:16px}
+  .mood-btn{padding:10px 12px;font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌸 わたしの毎日ノート</h1>
+  <span class="dt" id="today-date"></span>
+</div>
+
+<div class="wrap">
+
+  <!-- 今日の気分 -->
+  <div class="card">
+    <div class="card-title">今日の気分はどう？</div>
+    <div class="mood-row">
+      <button type="button" class="mood-btn" onclick="selectMood(this,'5','最高！')" data-score="5">🌟</button>
+      <button type="button" class="mood-btn active" onclick="selectMood(this,'4','いい感じ')" data-score="4">😊</button>
+      <button type="button" class="mood-btn" onclick="selectMood(this,'3','ふつう')" data-score="3">😐</button>
+      <button type="button" class="mood-btn" onclick="selectMood(this,'2','ちょっとしんどい')" data-score="2">😔</button>
+      <button type="button" class="mood-btn" onclick="selectMood(this,'1','つらい')" data-score="1">😢</button>
+    </div>
+    <div id="mood-label" style="font-size:13px;color:#c0a0a8;margin-top:8px">😊 いい感じ</div>
+  </div>
+
+  <!-- タグ -->
+  <div class="card">
+    <div class="card-title">今日はどんな一日？（タップして選ぶ）</div>
+    <div class="tag-row">
+      <button type="button" onclick="toggleTag(this)" data-value="育児・家事" class="tag-btn active">👶 育児・家事</button>
+      <button type="button" onclick="toggleTag(this)" data-value="お仕事" class="tag-btn">💼 お仕事</button>
+      <button type="button" onclick="toggleTag(this)" data-value="自分の気持ち" class="tag-btn">💭 自分の気持ち</button>
+      <button type="button" onclick="toggleTag(this)" data-value="家族との時間" class="tag-btn">👨‍👩‍👦 家族時間</button>
+      <button type="button" onclick="toggleTag(this)" data-value="健康・身体" class="tag-btn">🌿 健康・身体</button>
+    </div>
+  </div>
+
+  <!-- Todo -->
+  <div class="card">
+    <div class="card-title">今日できたこと・やったこと ✨</div>
+    <p class="hint">「ごはんを食べた」「子どもと話した」でも立派な記録です 🌸</p>
+    <div style="margin:12px 0">
+      <div class="todo-list" id="todo-list">
+        <div class="todo-item"><input type="checkbox"><input type="text" value="予定の時間に起きれた"></div>
+        <div class="todo-item"><input type="checkbox"><input type="text" value="笑顔で接することができた"></div>
+        <div class="todo-item"><input type="checkbox"><input type="text" value="自分の未来について考えて笑顔になれた"></div>
+        <div class="todo-item"><input type="checkbox"><input type="text" placeholder="例：子どもとご飯を食べた"></div>
+      </div>
+    </div>
+    <span class="add-todo" onclick="addTodo()">＋ 追加する</span>
+  </div>
+
+  <!-- 今日の記録 -->
+  <div class="card">
+    <div class="card-title">今日のことを自由に書いてね 📝</div>
+    <p class="hint">うまく書けなくてもOK。思ったことをそのまま書くだけでいいよ 🌷<br>書けない日は「今日はしんどかった」だけでも十分です。</p>
+    <textarea class="journal" id="journal-input" style="margin-top:10px" placeholder="今日あったこと、感じたこと、なんでも...&#10;&#10;「今日はしんどかった」でも&#10;「子どもが笑ってくれた」でも&#10;なんでもOKです 🌸"></textarea>
+    <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-main" onclick="processJournal()" id="process-btn">AIに読んでもらう ✨</button>
+      <button class="btn btn-clear" onclick="clearAll()">クリア</button>
+    </div>
+    <div class="loading" id="loading">
+      <div class="spin"></div>
+      <span id="loading-text">読んでいるよ...</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 出力 -->
+  <div class="output" id="output">
+
+    <!-- 褒めボックス -->
+    <div class="praise-box">
+      <div class="praise-emoji" id="out-emoji">🌸</div>
+      <div class="praise-title">今日のあなたへ</div>
+      <textarea class="editable" id="out-praise" rows="4"></textarea>
+    </div>
+
+    <!-- Todo -->
+    <div class="oblock">
+      <div class="oblock-label">✨ 今日できたこと</div>
+      <div id="out-todo-list"></div>
+    </div>
+
+    <!-- 今日の記録 -->
+    <div class="oblock">
+      <div class="oblock-label">📝 今日の記録
+        <span style="font-size:10px;color:#d0b8c0;font-weight:400">タップして編集できるよ</span>
+      </div>
+      <textarea class="editable-left" id="out-journal" rows="5"></textarea>
+    </div>
+
+    <!-- 気づき -->
+    <div class="oblock">
+      <div class="oblock-label">💭 今日の気づき
+        <button class="regen-btn" id="regen-insight" onclick="regenerate('insight')">書き直す</button>
+      </div>
+      <textarea class="editable-left" id="out-insight" rows="4"></textarea>
+    </div>
+
+    <!-- 明日へ -->
+    <div class="oblock">
+      <div class="oblock-label">🌷 明日の小さな一歩
+        <button class="regen-btn" id="regen-tomorrow" onclick="regenerate('tomorrow')">書き直す</button>
+      </div>
+      <textarea class="editable-left" id="out-tomorrow" rows="3"></textarea>
+    </div>
+
+    <button class="copy-btn" onclick="copyOutput()" id="copy-btn">Notionにコピー 📋</button>
+
+    <div class="continue-msg">
+      今日も書いてくれてありがとう 🌸<br>
+      続けることより、書いた今日を褒めてあげてね。
+    </div>
+
+  </div>
+</div>
+
+<script>
+const today = new Date();
+const dateStr = today.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+document.getElementById('today-date').textContent = dateStr;
+
+let selectedMood = {score:'4', label:'いい感じ', emoji:'😊'};
+let lastJournal = '';
+
+function selectMood(btn, score, label) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedMood = {score, label, emoji: btn.textContent};
+  document.getElementById('mood-label').textContent = `${btn.textContent} ${label}`;
+}
+
+function toggleTag(btn){btn.classList.toggle('active');}
+function getTags(){return Array.from(document.querySelectorAll('.tag-btn.active')).map(b=>b.dataset.value);}
+
+function addTodo(){
+  const list = document.getElementById('todo-list');
+  const d = document.createElement('div');
+  d.className = 'todo-item';
+  d.innerHTML = '<input type="checkbox"><input type="text" placeholder="今日やったこと...">';
+  list.appendChild(d);
+  d.querySelector('input[type=text]').focus();
+}
+
+function getTodos(){
+  return Array.from(document.querySelectorAll('.todo-item')).map(el=>({
+    done:el.querySelector('input[type=checkbox]').checked,
+    text:el.querySelector('input[type=text]').value.trim()
+  })).filter(t=>t.text);
+}
+
+function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+
+let loadInterval;
+const msgs=['読んでいるよ...','あなたの言葉を受け取ってるよ...','大切に読んでいるよ...','もうすぐだよ...'];
+
+function startLoad(){
+  let i=0;
+  const el=document.getElementById('loading-text');
+  el.textContent=msgs[0];
+  loadInterval=setInterval(()=>{i=(i+1)%msgs.length;el.textContent=msgs[i];},2000);
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('process-btn').disabled=true;
+}
+function stopLoad(){
+  clearInterval(loadInterval);
+  document.getElementById('loading').classList.remove('show');
+  document.getElementById('process-btn').disabled=false;
+}
+
+async function callAI(prompt){
+  const r = await fetch('https://ai-diary-proxy.glitter-crystal-beach.workers.dev',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1200,
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  const d = await r.json();
+  const t = d.content?.find(b=>b.type==='text')?.text||'';
+  return JSON.parse(t.replace(/```json|```/g,'').trim());
+}
+
+async function processJournal(){
+  const journal = document.getElementById('journal-input').value.trim();
+  if(!journal){alert('今日のことを少しだけ書いてみてね 🌸');return;}
+  lastJournal = journal;
+  startLoad();
+  try{
+    const todos = getTodos();
+    const todoText = todos.map(t=>`- [${t.done?'x':' '}] ${t.text}`).join('\n')||'（記録なし）';
+    const result = await callAI(`あなたはHSPで自己肯定感が低めの女性の、やさしく温かい友人です。
+彼女が書いてくれた日記を読んで、以下のJSONのみを返してください（\`\`\`不要）。
+
+【今日の気分】${selectedMood.emoji}${selectedMood.label}（${selectedMood.score}/5）
+【今日のタグ】${getTags().join('・')}
+【できたこと】
+${todoText}
+【今日の記録】
+${journal}
+
+以下のルールを守ってください：
+・批判・アドバイス・改善点は絶対に書かない
+・できたことを全力で承認・褒める
+・「でも」「もっと」「〜すべき」は使わない
+・友達に話すような自然な口調で
+・絵文字を適度に使って温かく
+・「すごい」「えらい」より「ちゃんと伝わってるよ」「よく頑張ったね」など共感ベースで
+
+{
+  "praise": "今日の日記を読んだ感想と、あなたへのメッセージ（150字程度・温かく共感ベースで・絵文字あり）",
+  "praise_emoji": "今日にぴったりの絵文字1つ",
+  "journal_rewrite": "日記をやさしい言葉で自然に整えたもの（元の気持ちを大切に・200字程度）",
+  "insight": "今日気づいたこと・よかったことを1〜2点（「・」始まり・承認ベースで）",
+  "tomorrow": "明日の小さな一歩（プレッシャーのない・できそうな小さなこと1つ・1文）"
+}`);
+    renderOutput(result, todos);
+  }catch(e){
+    alert('うまくいかなかったみたい。もう一度試してみてね 🌸');
+  }
+  stopLoad();
+}
+
+function renderOutput(result, todos){
+  document.getElementById('out-emoji').textContent = result.praise_emoji || '🌸';
+  const praiseEl = document.getElementById('out-praise');
+  praiseEl.value = result.praise || '';
+  autoResize(praiseEl);
+  praiseEl.oninput = ()=>autoResize(praiseEl);
+
+  const journalEl = document.getElementById('out-journal');
+  journalEl.value = result.journal_rewrite || '';
+  autoResize(journalEl);
+  journalEl.oninput = ()=>autoResize(journalEl);
+
+  const insightEl = document.getElementById('out-insight');
+  insightEl.value = result.insight || '';
+  autoResize(insightEl);
+  insightEl.oninput = ()=>autoResize(insightEl);
+
+  const tomorrowEl = document.getElementById('out-tomorrow');
+  tomorrowEl.value = result.tomorrow || '';
+  autoResize(tomorrowEl);
+  tomorrowEl.oninput = ()=>autoResize(tomorrowEl);
+
+  const done = todos.filter(t=>t.done).length;
+  document.getElementById('out-todo-list').innerHTML = todos.length
+    ? todos.map(t=>`<div class="todo-out-item"><span style="color:${t.done?'#c0748a':'#d0b8c0'};flex-shrink:0">${t.done?'✅':'⬜'}</span><span style="${t.done?'color:#4a4a4a':'color:#c0a0a8'}">${t.text}</span></div>`).join('')
+    : '<span style="font-size:13px;color:#d0b8c0">今日もお疲れ様 🌸</span>';
+
+  document.getElementById('output').classList.add('show');
+  setTimeout(()=>document.getElementById('output').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+async function regenerate(field){
+  const journal = lastJournal || document.getElementById('journal-input').value.trim();
+  if(!journal){alert('先に日記を書いてみてね 🌸');return;}
+  const btn = document.getElementById('regen-'+field);
+  btn.textContent='書き直してるよ...';btn.disabled=true;
+  const labels = {
+    insight:'今日気づいたこと・よかったことを1〜2点（「・」始まり・承認ベースで・批判なし）',
+    tomorrow:'明日の小さな一歩（プレッシャーのない・できそうな小さなこと1つ・1文）'
+  };
+  try{
+    const r = await callAI(`やさしく温かい友人として、以下の日記から指定項目のみ生成しJSONのみ返してください（\`\`\`不要）。\n【日記】${journal}\n{"result":"${labels[field]}"}`);
+    const el = document.getElementById('out-'+field);
+    el.value = r.result||'';
+    autoResize(el);
+  }catch(e){alert('もう一度試してみてね 🌸');}
+  btn.textContent='書き直す';btn.disabled=false;
+}
+
+function clearAll(){
+  document.getElementById('journal-input').value='';
+  document.getElementById('output').classList.remove('show');
+  document.querySelectorAll('.todo-item').forEach(item=>{
+    item.querySelector('input[type=checkbox]').checked=false;
+    const txt=item.querySelector('input[type=text]');
+    const defaults=['予定の時間に起きれた','笑顔で接することができた','自分の未来について考えて笑顔になれた'];if(!defaults.includes(txt.value))txt.value='';
+  });
+  lastJournal='';
+}
+
+function copyOutput(){
+  const tags = getTags().join(' / ');
+  const todos = getTodos();
+  const text = `# 🌸 ${dateStr}\n\n**気分**：${selectedMood.emoji}${selectedMood.label}　　**タグ**：${tags}\n\n---\n\n## ✨ 今日できたこと\n${todos.map(t=>`- [${t.done?'x':' '}] ${t.text}`).join('\n')||'（記録なし）'}\n\n---\n\n## 💌 今日のあなたへ\n${document.getElementById('out-praise').value}\n\n## 📝 今日の記録\n${document.getElementById('out-journal').value}\n\n## 💭 今日の気づき\n${document.getElementById('out-insight').value}\n\n## 🌷 明日の小さな一歩\n${document.getElementById('out-tomorrow').value}\n`;
+  const btn = document.getElementById('copy-btn');
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='コピーできたよ！ ✨';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Notionにコピー 📋';btn.classList.remove('copied');},2500);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    btn.textContent='コピーできたよ！ ✨';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Notionにコピー 📋';btn.classList.remove('copied');},2500);
+  });
+}
+</script>
+</body>
+</html>
