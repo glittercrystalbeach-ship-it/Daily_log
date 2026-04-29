@@ -345,6 +345,93 @@ textarea.editable:focus{background:#f7f6f3;border-radius:4px;padding:6px;margin:
 </div>
 
 <script>
+const PROXY_URL = 'https://ai-diary-proxy.glitter-crystal-beach.workers.dev';
+
+function switchTab(tab) {
+  const daily = document.querySelector('.wrap');
+  const weekly = document.getElementById('weekly-section');
+  const tabDaily = document.getElementById('tab-daily');
+  const tabWeekly = document.getElementById('tab-weekly');
+  if (tab === 'daily') {
+    daily.style.display = 'block';
+    weekly.style.display = 'none';
+    tabDaily.style.background = '#37352f';
+    tabDaily.style.color = '#fff';
+    tabWeekly.style.background = 'transparent';
+    tabWeekly.style.color = '#9b9a97';
+  } else {
+    daily.style.display = 'none';
+    weekly.style.display = 'block';
+    tabDaily.style.background = 'transparent';
+    tabDaily.style.color = '#9b9a97';
+    tabWeekly.style.background = '#37352f';
+    tabWeekly.style.color = '#fff';
+  }
+}
+
+async function generateWeeklyReview() {
+  const days = document.getElementById('review-days').value;
+  const btn = document.getElementById('review-btn');
+  const loading = document.getElementById('review-loading');
+  const output = document.getElementById('review-output');
+  btn.disabled = true;
+  loading.style.display = 'flex';
+  output.style.display = 'none';
+  try {
+    const res = await fetch(`${PROXY_URL}/weekly-review?days=${days}`);
+    const data = await res.json();
+    if (data.error) { alert('エラー: ' + data.error); return; }
+    document.getElementById('rv-period').textContent = '📅 ' + (data.period || '');
+    document.getElementById('rv-summary').textContent = data.summary || '';
+    document.getElementById('rv-wins').textContent = data.wins || '';
+    document.getElementById('rv-challenges').textContent = data.challenges || '';
+    document.getElementById('rv-insights').textContent = data.insights || '';
+    document.getElementById('rv-business').textContent = data.business || '';
+    document.getElementById('rv-mood').textContent = data.mood_trend || '';
+    document.getElementById('rv-next').textContent = data.next_week || '';
+    output.style.display = 'block';
+  } catch(e) { alert('エラー: ' + e.message); }
+  btn.disabled = false;
+  loading.style.display = 'none';
+}
+
+function copyReview() {
+  const period = document.getElementById('rv-period').textContent;
+  const text = `# ${period}
+
+## 📝 今週のサマリー
+${document.getElementById('rv-summary').textContent}
+
+## 🏆 今週の成果
+${document.getElementById('rv-wins').textContent}
+
+## 🔄 課題・改善点
+${document.getElementById('rv-challenges').textContent}
+
+## 💡 気づき・学び
+${document.getElementById('rv-insights').textContent}
+
+## 🏢 事業への接続
+${document.getElementById('rv-business').textContent}
+
+## 🎯 来週の優先タスク
+${document.getElementById('rv-next').textContent}
+
+## 😊 気分の傾向
+${document.getElementById('rv-mood').textContent}`;
+  const btn = document.getElementById('rv-copy-btn');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'コピーしました！'; btn.style.background = '#0f6e56';
+    setTimeout(() => { btn.textContent = 'Notionにコピー'; btn.style.background = '#37352f'; }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent = 'コピーしました！';
+    setTimeout(() => { btn.textContent = 'Notionにコピー'; }, 2000);
+  });
+}
+
 const today = new Date();
 const startDate = new Date('2026-01-01');
 const autoDay = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
