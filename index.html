@@ -143,7 +143,7 @@ textarea.editable:focus{background:#f7f6f3;border-radius:4px;padding:6px;margin:
     <div class="meta-row">
       <div class="meta-field">
         <label>継続日数</label>
-        <input type="number" id="day-count" value="115" min="1">
+        <input type="number" id="day-count" value="" min="1">
       </div>
       <div class="meta-field">
         <label>気分スコア（1〜5）</label>
@@ -270,7 +270,12 @@ textarea.editable:focus{background:#f7f6f3;border-radius:4px;padding:6px;margin:
 
 <script>
 const today = new Date();
-window.addEventListener('load', ()=>{ setTimeout(loadTemplate, 100); });
+const startDate = new Date('2026-01-01');
+const autoDay = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+window.addEventListener('load', ()=>{
+  setTimeout(loadTemplate, 100);
+  document.getElementById('day-count').value = autoDay;
+});
 const dateStr = today.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
 document.getElementById('today-date').textContent = dateStr;
 document.getElementById('out-date').textContent = dateStr;
