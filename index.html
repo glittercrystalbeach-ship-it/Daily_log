@@ -595,7 +595,7 @@ function buildText(){
   const mood=document.getElementById('mood-score').value;
   const tags=getTags().join(' / ');
   const todos=getTodos();
-  return `# 📅 ${dateStr}　${day}日目\n\n**タグ**：${tags}　　**気分スコア**：${mood} / 5\n\n---\n\n## ✅ Today's Todo\n${todos.map(t=>`- [${t.done?'x':' '}] ${t.text}`).join('\n')||'（なし）'}\n\n---\n\n## 📝 今日の記録\n${document.getElementById('out-journal').value}\n\n---\n\n## 💡 気づき・学び\n${document.getElementById('out-insight').value}\n\n## 🏢 事業への接続\n${document.getElementById('out-business').value}\n\n## 🎯 明日の一番大事なこと\n${document.getElementById('out-tomorrow').value}\n`;
+  return `# 📅 ${dateStr}　${day}日目\n\n**タグ**：${tags}　　**気分スコア**：${mood} / 5\n\n---\n\n## ✅ Today's Todo\n${todos.map(t=>t.done?`✅ ${t.text}`:`× ${t.text}`).join('\n')||'（なし）'}\n\n---\n\n## 📝 今日の記録\n${document.getElementById('out-journal').value}\n\n---\n\n## 💡 気づき・学び\n${document.getElementById('out-insight').value}\n\n## 🏢 事業への接続\n${document.getElementById('out-business').value}\n\n## 🎯 明日の一番大事なこと\n${document.getElementById('out-tomorrow').value}\n`;
 }
 
 function setBtnCopied(){
