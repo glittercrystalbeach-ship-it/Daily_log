@@ -251,7 +251,7 @@ async function processJournal(){
   startLoad();
   try{
     const todos = getTodos();
-    const todoText = todos.map(t=>`- [${t.done?'x':' '}] ${t.text}`).join('\n')||'（記録なし）';
+    const todoText = todos.map(t=>t.done?`✅ ${t.text}`:`× ${t.text}`).join('\n')||'（記録なし）';
     const result = await callAI(`あなたは日記の整理係です。感情的な評価や励ましは不要です。
 以下の日記をシンプルに整理して、JSONのみを返してください（\`\`\`不要）。
 
@@ -272,7 +272,7 @@ ${journal}
 {
   "praise": "今日を一言で表すシンプルな言葉（30字以内・絵文字1つだけ・評価なし）",
   "praise_emoji": "今日にぴったりの絵文字1つ",
-  "journal_rewrite": "日記の内容を事実ベースでシンプルに整理（余計な感情コメントなし・150字程度）",
+  "journal_rewrite": "丁寧語・敬体（です・ます調）で整えた文章150字程度。元の気持ちや出来事を保ちながら、第三者に報告できる丁寧な文体で。",
   "insight": "今日あったことを客観的に2点（「・」始まり・事実ベース）",
   "tomorrow": "明日できそうな小さなこと1つ（1文・シンプルに）"
 }`);
@@ -346,7 +346,7 @@ function clearAll(){
 function copyOutput(){
   const tags = getTags().join(' / ');
   const todos = getTodos();
-  const text = `# 🌸 ${dateStr}\n\n**気分**：${selectedMood.emoji}${selectedMood.label}　　**タグ**：${tags}\n\n---\n\n## ✨ 今日できたこと\n${todos.map(t=>`- [${t.done?'x':' '}] ${t.text}`).join('\n')||'（記録なし）'}\n\n---\n\n## 💌 今日のあなたへ\n${document.getElementById('out-praise').value}\n\n## 📝 今日の記録\n${document.getElementById('out-journal').value}\n\n## 💭 今日の気づき\n${document.getElementById('out-insight').value}\n\n## 🌷 明日の小さな一歩\n${document.getElementById('out-tomorrow').value}\n`;
+  const text = `# 🌸 ${dateStr}\n\n**気分**：${selectedMood.emoji}${selectedMood.label}　　**タグ**：${tags}\n\n---\n\n## ✨ 今日できたこと\n${todos.map(t=>t.done?`✅ ${t.text}`:`× ${t.text}`).join('\n')||'（記録なし）'}\n\n---\n\n## 💌 今日のあなたへ\n${document.getElementById('out-praise').value}\n\n## 📝 今日の記録\n${document.getElementById('out-journal').value}\n\n## 💭 今日の気づき\n${document.getElementById('out-insight').value}\n\n## 🌷 明日の小さな一歩\n${document.getElementById('out-tomorrow').value}\n`;
   const btn = document.getElementById('copy-btn');
   navigator.clipboard.writeText(text).then(()=>{
     btn.textContent='コピーできたよ！ ✨';btn.classList.add('copied');
