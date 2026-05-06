@@ -181,13 +181,28 @@ textarea.editable:focus{background:#f7f6f3;border-radius:4px;padding:6px;margin:
     </div>
     <div style="margin-bottom:14px;padding:12px 14px;background:#f7f6f3;border-radius:6px;border:1px solid #e9e9e7">
       <div style="font-size:11px;font-weight:600;color:#9b9a97;margin-bottom:10px;letter-spacing:.05em">📋 ルーティンタスク（チェックして読み込む）</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="template-checks">
-        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="Notion日報記入" checked style="accent-color:#37352f"> Notion日報記入</label>
-        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="読書・インプット" checked style="accent-color:#37352f"> 読書・インプット</label>
+      <div id="template-checks">
+      <div style="font-size:11px;color:#9b9a97;margin:8px 0 5px;font-weight:600">🌅 朝のルーティン</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px">
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="◯時に起床" checked style="accent-color:#37352f"> ◯時に起床</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="起床後すぐ目標・計画の確認" checked style="accent-color:#37352f"> 起床後すぐ目標・計画の確認</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="体を動かす（5分）" checked style="accent-color:#37352f"> 体を動かす（5分）</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="収入になる行動を1つ実行" checked style="accent-color:#37352f"> 収入になる行動を1つ実行</label>
+      </div>
+      <div style="font-size:11px;color:#9b9a97;margin:8px 0 5px;font-weight:600">💪 日中のルーティン</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px">
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="読書・インプット30分" checked style="accent-color:#37352f"> 読書・インプット30分</label>
         <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="AIツール構築" checked style="accent-color:#37352f"> AIツール構築</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="学んだことを発信する" checked style="accent-color:#37352f"> 学んだことを発信する</label>
         <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="マネーフォワード入力" style="accent-color:#37352f"> マネーフォワード入力</label>
-        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="育児・家族時間" style="accent-color:#37352f"> 育児・家族時間</label>
-        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="SNS投稿・発信" style="accent-color:#37352f"> SNS投稿・発信</label>
+      </div>
+      <div style="font-size:11px;color:#9b9a97;margin:8px 0 5px;font-weight:600">🌙 夜のルーティン</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px">
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="就寝1時間前に日報完成" checked style="accent-color:#37352f"> 就寝1時間前に日報完成</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="感謝できること3つを書く" checked style="accent-color:#37352f"> 感謝できること3つを書く</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="翌日のTodoを前夜に決める" checked style="accent-color:#37352f"> 翌日のTodoを前夜に決める</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" class="tmpl-cb" value="Notion日報記入" checked style="accent-color:#37352f"> Notion日報記入</label>
+      </div>
       </div>
     </div>
     <div class="todo-list" id="todo-list"></div>
